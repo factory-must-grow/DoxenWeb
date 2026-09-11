@@ -71,6 +71,16 @@ internal static class DocxBuilder
         return new MemoryStream(bytes);
     }
 
+    // Извлекает весь текст тела документа — для проверки результата
+    // генерации в тестах.
+    public static string ExtractText(byte[] docxBytes)
+    {
+        using var stream = new MemoryStream(docxBytes);
+        using var document = WordprocessingDocument.Open(stream, false);
+        var body = document.MainDocumentPart?.Document?.Body;
+        return body is null ? "" : string.Concat(body.Descendants<Text>().Select(t => t.Text));
+    }
+
     private static MemoryStream Build(Action<MainDocumentPart> configure)
     {
         var stream = new MemoryStream();
