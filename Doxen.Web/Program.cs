@@ -1,10 +1,22 @@
+using System.Globalization;
 using Doxen.Data;
 using Doxen.Web.Data;
 using Doxen.Web.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Весь интерфейс — на русском (00-README.md): даты, числа и подобное
+// форматируются по-русски, а не по умолчанию инвариантной культурой.
+var russianCulture = new CultureInfo("ru-RU");
+builder.Services.Configure<RequestLocalizationOptions>(o =>
+{
+    o.DefaultRequestCulture = new RequestCulture(russianCulture);
+    o.SupportedCultures = new[] { russianCulture };
+    o.SupportedUICultures = new[] { russianCulture };
+});
 
 var connectionString = builder.Configuration.GetConnectionString("Doxen")
     ?? throw new InvalidOperationException("Не задана строка подключения ConnectionStrings:Doxen.");
@@ -81,6 +93,7 @@ builder.Services.AddSingleton<PlanRepository>();
 builder.Services.AddSingleton<UserProfileRepository>();
 builder.Services.AddSingleton<UsageRepository>();
 builder.Services.AddSingleton<GenerationLogRepository>();
+builder.Services.AddSingleton<AdminUserRepository>();
 builder.Services.AddScoped<CurrentPlanResolver>();
 builder.Services.AddScoped<LimitChecker>();
 
@@ -108,6 +121,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
     app.UseHttpsRedirection();
 }
+
+app.UseRequestLocalization();
 
 app.UseStaticFiles();
 

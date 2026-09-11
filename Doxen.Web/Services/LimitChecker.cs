@@ -48,7 +48,7 @@ public sealed class LimitChecker
             return null;
         }
 
-        var pro = await _planRepository.GetByCodeAsync("pro", ct);
+        var pro = plan.Code == "pro" ? null : await _planRepository.GetByCodeAsync("pro", ct);
         var proClause = pro is not null ? $" на «{pro.Name}» — {pro.MaxFileSizeMb} МБ." : "";
         return $"Файл больше {plan.MaxFileSizeMb} МБ. На тарифе «{plan.Name}» это предел;{proClause}";
     }
@@ -61,9 +61,10 @@ public sealed class LimitChecker
             return null;
         }
 
+        var upgradeClause = plan.Code == "pro" ? "" : " или перейдите на «Pro»";
         return $"В этом шаблоне {variableCount} переменных, а на тарифе «{plan.Name}» можно до " +
                $"{plan.MaxVariablesPerTemplate}. Обычно это значит, что в одном файле собрано много документов " +
-               "сразу — разделите их или перейдите на «Pro».";
+               $"сразу — разделите их{upgradeClause}.";
     }
 
     // 3. Документов за месяц — перед генерацией. При пакете считается
@@ -78,9 +79,10 @@ public sealed class LimitChecker
         if (remaining <= 0)
         {
             var nextMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(1);
+            var upgradeClause = plan.Code == "pro" ? "" : " или можно перейти на «Pro»";
             return MonthlyLimitResult.Blocked(
                 $"В этом месяце вы собрали все {plan.MaxDocumentsPerMonth} документов тарифа «{plan.Name}». " +
-                $"Лимит обновится 1 {MonthNamesGenitive[nextMonth.Month - 1]} или можно перейти на «Pro».");
+                $"Лимит обновится 1 {MonthNamesGenitive[nextMonth.Month - 1]}{upgradeClause}.");
         }
 
         if (documentsNeeded > remaining)
