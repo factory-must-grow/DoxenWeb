@@ -6,67 +6,82 @@
     ViewData["Title"] = "Заполнение документа";
 }
 
-<h1>Заполнение документа</h1>
+<h1 class="h3 mb-4">Заполнение документа</h1>
 
 @if (Model.ErrorMessage is not null)
 {
-    <div class="alert alert-danger">@Model.ErrorMessage</div>
+    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
 }
 @if (Model.InfoMessage is not null)
 {
-    <div class="alert alert-info">@Model.InfoMessage</div>
+    <div class="alert alert-info" role="status">@Model.InfoMessage</div>
 }
 
 @if (Model.State.TemplateCacheKey is null || Model.TemplateMissing)
 {
-    <div class="card mb-4">
-        <div class="card-body">
-            <h2 class="h5">
-                @(Model.TemplateMissing ? "Выберите файл ещё раз" : "Загрузите шаблон")
-            </h2>
-            <form method="post" enctype="multipart/form-data" asp-page-handler="UploadTemplate">
-                <div class="mb-3">
-                    <input asp-for="TemplateUpload" type="file" class="form-control" accept=".docx" />
-                </div>
-                <button type="submit" class="btn btn-primary">Загрузить</button>
-            </form>
-        </div>
+    <div class="panel p-4 mb-4">
+        <h2 class="h5 mb-3">
+            @(Model.TemplateMissing ? "Выберите файл ещё раз" : "Загрузите шаблон")
+        </h2>
+        <form method="post" enctype="multipart/form-data" asp-page-handler="UploadTemplate">
+            <div class="mb-3">
+                <label class="form-label" for="TemplateUpload">Шаблон .docx</label>
+                <input asp-for="TemplateUpload" type="file" class="form-control" accept=".docx" />
+            </div>
+            <button type="submit" class="btn btn-ink">Загрузить</button>
+        </form>
     </div>
 }
 
 @if (Model.State.TemplateCacheKey is not null && !Model.TemplateMissing)
 {
-    <div class="row">
+    <div class="row g-4">
         <div class="col-lg-8">
-            <form method="post" asp-page-handler="Save">
-                @{ ViewData["BatchMode"] = Model.State.BatchMode; }
-                @foreach (var group in Model.SharedGroups)
-                {
-                    <fieldset class="card mb-3">
-                        <div class="card-body">
-                            <legend class="h6">@group.Title</legend>
+            <div class="panel p-4">
+                <div class="d-flex align-items-start flex-wrap gap-2 mb-2">
+                    <div class="me-auto">
+                        <h2 class="mb-1" style="font-size:1.35rem">
+                            @if (Model.TotalCount > 0 && Model.ResolvedCount < Model.TotalCount)
+                            {
+                                <text>Осталось заполнить @(Model.TotalCount - Model.ResolvedCount) @PluralizeValues(Model.TotalCount - Model.ResolvedCount)</text>
+                            }
+                            else
+                            {
+                                <text>Всё заполнено</text>
+                            }
+                        </h2>
+                        <p class="mb-0" style="font-size:.875rem;color:var(--muted)">
+                            @Model.State.TemplateFileName
+                        </p>
+                    </div>
+                </div>
+
+                <form method="post" asp-page-handler="Save">
+                    @{ ViewData["BatchMode"] = Model.State.BatchMode; }
+                    @foreach (var group in Model.SharedGroups)
+                    {
+                        <fieldset class="mb-3">
+                            <legend class="group-head mb-0">@group.Title</legend>
                             @foreach (var field in group.Fields)
                             {
                                 <partial name="_GenerateField" model="field" />
                             }
-                        </div>
-                    </fieldset>
-                }
+                        </fieldset>
+                    }
 
-                @if (Model.State.BatchMode)
-                {
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <legend class="h6">По каждому документу</legend>
+                    @if (Model.State.BatchMode)
+                    {
+                        <div class="mt-3 mb-3">
+                            <div class="group-head mb-2">По каждому документу</div>
                             <div class="table-responsive">
-                                <table class="table table-bordered table-sm" id="dataset-table">
+                                <table class="table table-bordered table-sm align-middle" id="dataset-table">
                                     <thead>
                                         <tr>
                                             <th>Документ</th>
                                             @foreach (var column in Model.TableColumns)
                                             {
                                                 <th>
-                                                    {{@column.Variable.Path}}
+                                                    <span class="field-path">@column.Variable.Path</span>
                                                     <button type="submit" class="btn btn-sm btn-link p-0 d-block"
                                                             asp-page-handler="MoveField"
                                                             asp-route-path="@column.Variable.Path"
@@ -75,7 +90,7 @@
                                                     </button>
                                                 </th>
                                             }
-                                            <th></th>
+                                            <th><span class="visually-hidden">Действия</span></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -84,7 +99,8 @@
                                             var row = Model.State.Datasets[rowIndex];
                                             <tr>
                                                 <td>
-                                                    <input type="text" class="form-control form-control-sm"
+                                                    <label class="visually-hidden" for="dstitle_@rowIndex">Название документа @(rowIndex + 1)</label>
+                                                    <input type="text" id="dstitle_@rowIndex" class="form-control form-control-sm"
                                                            name="dstitle|@rowIndex" value="@row.Title"
                                                            placeholder="Документ @(rowIndex + 1)" />
                                                 </td>
@@ -92,8 +108,10 @@
                                                 {
                                                     var cellValue = ValueResolver.Resolve(
                                                         JsonPathBuilder.ToElement(row.ValuesJson), column.Variable.Path);
+                                                    var cellId = $"ds_{rowIndex}_{column.Variable.Path.Replace('.', '_')}";
                                                     <td>
-                                                        <input type="text" class="form-control form-control-sm dataset-cell"
+                                                        <label class="visually-hidden" for="@cellId">@column.Variable.Path, документ @(rowIndex + 1)</label>
+                                                        <input type="text" id="@cellId" class="form-control form-control-sm dataset-cell"
                                                                name="ds|@rowIndex|@column.Variable.Path"
                                                                value="@(cellValue.Status == Doxen.Engine.Models.ResolveStatus.Resolved ? cellValue.Value : "")"
                                                                data-row="@rowIndex" />
@@ -102,8 +120,9 @@
                                                 <td>
                                                     @if (Model.State.Datasets.Count > 1)
                                                     {
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                                asp-page-handler="RemoveRow" asp-route-index="@rowIndex">
+                                                        <button type="submit" class="btn btn-sm btn-quiet btn-danger-outline"
+                                                                asp-page-handler="RemoveRow" asp-route-index="@rowIndex"
+                                                                aria-label="Убрать документ @(rowIndex + 1)">
                                                             ✕
                                                         </button>
                                                     }
@@ -113,46 +132,64 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <p class="text-muted small">
+                            <p style="font-size:.8125rem;color:var(--muted)" class="mb-0">
                                 В таблицу можно вставить диапазон, скопированный из Excel — выделите первую ячейку и нажмите Ctrl+V.
                             </p>
                         </div>
+                    }
+
+                    <div class="d-flex flex-wrap gap-2 align-items-center pt-3 border-top" style="border-color:var(--rule) !important">
+                        @if (Model.AwaitingPartialBatchCount is { } allowed)
+                        {
+                            <button type="submit" class="btn btn-marker" asp-page-handler="Generate"
+                                    asp-route-confirmPartialBatch="true">
+                                Собрать доступные @allowed
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn btn-marker" asp-page-handler="Generate">
+                                @(Model.State.Datasets.Count > 1 ? "Собрать документы" : "Собрать документ")
+                            </button>
+                        }
+                        <button type="submit" class="btn btn-quiet" asp-page-handler="DownloadAnswers">
+                            Скачать файл ответов
+                        </button>
+                        <button type="submit" class="btn btn-quiet" asp-page-handler="AddRow">
+                            Добавить ещё документ
+                        </button>
+                        <span class="ms-auto" style="font-size:.8125rem;color:var(--muted)">Заполнено: @Model.ResolvedCount из @Model.TotalCount</span>
                     </div>
-                }
+                </form>
+            </div>
 
-                <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
-                    @if (Model.AwaitingPartialBatchCount is { } allowed)
-                    {
-                        <button type="submit" class="btn btn-warning" asp-page-handler="Generate"
-                                asp-route-confirmPartialBatch="true">
-                            Собрать доступные @allowed
-                        </button>
-                    }
-                    else
-                    {
-                        <button type="submit" class="btn btn-warning" asp-page-handler="Generate">
-                            @(Model.State.Datasets.Count > 1 ? "Собрать документы" : "Собрать документ")
-                        </button>
-                    }
-                    <button type="submit" class="btn btn-outline-secondary" asp-page-handler="DownloadAnswers">
-                        Скачать файл ответов
-                    </button>
-                    <button type="submit" class="btn btn-outline-secondary" asp-page-handler="AddRow">
-                        Добавить ещё документ
-                    </button>
-                    <span class="text-muted ms-auto">Заполнено: @Model.ResolvedCount из @Model.TotalCount</span>
-                </div>
-            </form>
-
-            <form method="post" enctype="multipart/form-data" asp-page-handler="UploadAnswers" class="mb-4">
-                <label class="form-label">Загрузить файл ответов</label>
+            <form method="post" enctype="multipart/form-data" asp-page-handler="UploadAnswers" class="mt-4">
+                <label class="form-label" for="AnswersUpload">Загрузить файл ответов</label>
                 <div class="input-group" style="max-width: 480px;">
                     <input asp-for="AnswersUpload" type="file" class="form-control" accept=".json" />
-                    <button type="submit" class="btn btn-outline-secondary">Загрузить</button>
+                    <button type="submit" class="btn btn-quiet">Загрузить</button>
                 </div>
             </form>
         </div>
     </div>
+}
+
+@functions {
+    private static string PluralizeValues(int count)
+    {
+        var mod100 = count % 100;
+        if (mod100 is >= 11 and <= 14)
+        {
+            return "значений";
+        }
+
+        return (count % 10) switch
+        {
+            1 => "значение",
+            2 or 3 or 4 => "значения",
+            _ => "значений",
+        };
+    }
 }
 
 @section Scripts {

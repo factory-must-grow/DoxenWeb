@@ -4,17 +4,19 @@
     ViewData["Title"] = "Профиль";
 }
 
-<h1>Профиль</h1>
+<h1 class="h3 mb-4">Профиль</h1>
 
-<dl class="row">
-    <dt class="col-sm-3">Почта</dt>
-    <dd class="col-sm-9">@Model.Email</dd>
+<div class="panel p-4 mb-4" style="max-width: 640px;">
+    <dl class="row mb-0">
+        <dt class="col-sm-4">Почта</dt>
+        <dd class="col-sm-8">@Model.Email</dd>
 
-    <dt class="col-sm-3">Тариф</dt>
-    <dd class="col-sm-9">@(Model.PlanName ?? "—")</dd>
+        <dt class="col-sm-4">Тариф</dt>
+        <dd class="col-sm-8">@(Model.PlanName ?? "—")</dd>
 
-    <dt class="col-sm-3">Дата регистрации</dt>
-    <dd class="col-sm-9">@(Model.MemberSince?.ToString("d MMMM yyyy") ?? "—")</dd>
-</dl>
+        <dt class="col-sm-4 mb-0">Дата регистрации</dt>
+        <dd class="col-sm-8 mb-0">@(Model.MemberSince?.ToString("d MMMM yyyy") ?? "—")</dd>
+    </dl>
+</div>
 
-<a asp-page="/Account/ChangePassword" class="btn btn-outline-secondary">Сменить пароль</a>
+<a asp-page="/Account/ChangePassword" class="btn btn-quiet">Сменить пароль</a>

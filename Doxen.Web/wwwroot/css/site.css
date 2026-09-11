@@ -1,22 +1,167 @@
+/* Дизайн-система Doxen — токены и компоненты по 06-design-system.md.
+   Эталон вёрстки: doxen-design.html. */
+
+:root {
+  --paper: #FFFFFF;
+  --ink: #14213D;
+  --muted: #5C6B84;
+  --rule: #DDE3EC;
+  --marker: #FFE066;
+  --marker-deep: #F0C808;
+  --surface: #F4F6FA;
+
+  --bs-primary: #14213D;
+  --bs-body-color: #14213D;
+  --bs-body-bg: #F4F6FA;
+  --bs-body-font-family: 'Golos Text', system-ui, sans-serif;
+  --bs-border-color: var(--rule);
+  --bs-link-color: #14213D;
+  --bs-link-hover-color: #0C1730;
+}
+
 html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
+  font-size: 16px;
   position: relative;
   min-height: 100%;
 }
 
 body {
+  background: var(--surface);
+  color: var(--ink);
+  font-family: 'Golos Text', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
   margin-bottom: 60px;
+  font-size: 0.9375rem;
+  overflow-x: hidden;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+h1 { font-size: clamp(2.1rem, 4.4vw, 3.4rem); font-weight: 700; letter-spacing: -.025em; line-height: 1.08; }
+h2 { font-size: clamp(1.5rem, 2.6vw, 2rem); font-weight: 600; letter-spacing: -.018em; }
+h3 { font-size: 1.0625rem; font-weight: 600; letter-spacing: -.008em; }
+.lead-sm { font-size: 1.0625rem; line-height: 1.6; color: var(--muted); max-width: 34em; }
+
+a { color: var(--ink); }
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* ---- маркер: главный визуальный приём ---- */
+.tok {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .92em;
+  background: var(--marker);
+  box-shadow: 0 0 0 .18em var(--marker);
+  border-radius: 2px;
+}
+
+/* ---- лист документа ---- */
+.sheet {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(20, 33, 61, .05), 0 12px 32px -18px rgba(20, 33, 61, .28);
+}
+.sheet-body { padding: 2.25rem 2.5rem; font-size: .9375rem; line-height: 1.85; }
+.sheet-body p { margin-bottom: 1.15rem; }
+.sheet-title { text-align: center; font-weight: 600; margin-bottom: 1.75rem; }
+
+@media (max-width: 575.98px) {
+  .sheet-body { padding: 1.5rem 1.25rem; }
+}
+
+/* ---- рабочая панель: граница вместо тени ---- */
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+/* ---- область загрузки файла ---- */
+.drop {
+  border: 1.5px dashed #B9C4D8;
+  border-radius: 4px;
+  background: var(--paper);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.drop:hover { border-color: var(--ink); }
+
+/* ---- кнопки: три вида, больше никаких ---- */
+.btn-ink, .btn-marker, .btn-quiet {
+  border-radius: 3px;
+  font-weight: 500;
+  padding: .6rem 1.4rem;
+  line-height: 1.4;
+}
+.btn-ink { background: var(--ink); color: #fff; border: 1px solid var(--ink); }
+.btn-ink:hover, .btn-ink:focus { background: #0C1730; color: #fff; }
+.btn-marker { background: var(--marker); color: var(--ink); border: 1px solid var(--marker-deep); font-weight: 600; }
+.btn-marker:hover, .btn-marker:focus { background: var(--marker-deep); color: var(--ink); }
+.btn-quiet { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+.btn-quiet:hover, .btn-quiet:focus { border-color: var(--ink); }
+.btn-quiet.btn-danger-outline { color: #A6291D; border-color: #E3B3AC; }
+.btn-quiet.btn-danger-outline:hover { border-color: #A6291D; }
+.btn-ink.btn-sm, .btn-marker.btn-sm, .btn-quiet.btn-sm { padding: .35rem .9rem; font-size: .875rem; }
+.btn-ink:disabled, .btn-marker:disabled, .btn-quiet:disabled { opacity: .55; }
+
+/* ---- верхняя панель приложения ---- */
+.app-top { background: var(--paper); border-bottom: 1px solid var(--rule); }
+.brand { font-weight: 700; letter-spacing: -.03em; font-size: 1.125rem; color: var(--ink); text-decoration: none; }
+.brand span { background: var(--marker); box-shadow: 0 0 0 .16em var(--marker); border-radius: 2px; }
+
+/* ---- экран заполнения ---- */
+.field-row { padding: .9rem 0; border-bottom: 1px solid var(--rule); }
+.field-row:last-child { border-bottom: 0; }
+.field-path { font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--muted); }
+.group-head { font-size: .8125rem; font-weight: 600; padding: .6rem 0; color: var(--muted); }
+
+.form-label { font-size: .9375rem; }
+.form-control, .form-select {
+  border-radius: 3px;
+  border-color: var(--rule);
+  font-size: .9375rem;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(20, 33, 61, .08);
+}
+.form-check-input:focus { box-shadow: 0 0 0 3px rgba(20, 33, 61, .08); }
+.form-check-input:checked { background-color: var(--ink); border-color: var(--ink); }
+
+/* ---- шаги "как это работает" — контент реально последовательный ---- */
+.step { display: flex; gap: 1.1rem; padding: 1.4rem 0; border-top: 1px solid var(--rule); }
+.step-n { font-family: 'JetBrains Mono', monospace; font-size: .8125rem; color: var(--muted); padding-top: .15rem; min-width: 1.5rem; }
+
+/* ---- счётчики / бейджи / таблицы админки ---- */
+.meter { height: 5px; background: var(--rule); border-radius: 3px; overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--ink); }
+.tag { font-size: .75rem; padding: .2rem .55rem; border-radius: 2px; border: 1px solid var(--rule); color: var(--muted); display: inline-block; }
+.tag-paid { background: var(--marker); border-color: var(--marker-deep); color: var(--ink); font-weight: 600; }
+
+/* .table-responsive обрезает широкие таблицы горизонтальной прокруткой
+   само по себе, но абсолютно спозиционированный .visually-hidden внутри
+   без position:relative на предке позиционируется от вьюпорта и вылезает
+   за пределы страницы — даём контейнеру собственный контекст позиционирования. */
+.table-responsive { position: relative; }
+
+table.tbl { font-size: .875rem; background: var(--paper); }
+table.tbl th { font-weight: 600; font-size: .8125rem; color: var(--muted); border-bottom: 1px solid var(--rule); padding: .7rem .9rem; }
+table.tbl td { padding: .75rem .9rem; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+table.tbl tbody tr:last-child td { border-bottom: 0; }
+
+.alert { border-radius: 3px; font-size: .9375rem; }
+
+.site-footer { color: var(--muted); font-size: .8125rem; border-top: 1px solid var(--rule); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
