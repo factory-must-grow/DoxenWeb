@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doxen — макет дизайна</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FFFFFF;
+  --ink:#14213D;
+  --muted:#5C6B84;
+  --rule:#DDE3EC;
+  --marker:#FFE066;
+  --marker-deep:#F0C808;
+  --surface:#F4F6FA;
+
+  --bs-primary:#14213D;
+  --bs-body-color:#14213D;
+  --bs-body-font-family:'Golos Text',system-ui,sans-serif;
+  --bs-border-color:var(--rule);
+}
+body{background:var(--surface);color:var(--ink);font-family:'Golos Text',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+
+/* ---- mockup viewer chrome (не часть продукта) ---- */
+.viewer-bar{position:sticky;top:0;z-index:50;background:var(--ink);color:#fff;padding:.5rem 1rem;font-size:.8125rem}
+.viewer-bar a{color:#C9D4E8;text-decoration:none;margin-right:1.25rem}
+.viewer-bar a:hover{color:#fff}
+.screen-label{font-size:.75rem;color:var(--muted);border-bottom:1px solid var(--rule);padding:.75rem 0;margin-bottom:2rem}
+
+/* ---- type scale ---- */
+h1{font-size:clamp(2.1rem,4.4vw,3.4rem);font-weight:700;letter-spacing:-.025em;line-height:1.08}
+h2{font-size:clamp(1.5rem,2.6vw,2rem);font-weight:600;letter-spacing:-.018em}
+h3{font-size:1.0625rem;font-weight:600;letter-spacing:-.008em}
+.lead-sm{font-size:1.0625rem;line-height:1.6;color:var(--muted);max-width:34em}
+
+/* ---- marker: главный визуальный приём ---- */
+.tok{font-family:'JetBrains Mono',monospace;font-size:.92em;background:var(--marker);
+     box-shadow:0 0 0 .18em var(--marker);border-radius:2px;transition:background .5s,box-shadow .5s,color .5s}
+.tok.filled{background:transparent;box-shadow:none;font-family:'Golos Text',sans-serif;font-size:1em}
+
+/* ---- document sheet ---- */
+.sheet{background:var(--paper);border:1px solid var(--rule);border-radius:3px;
+       box-shadow:0 1px 2px rgba(20,33,61,.05),0 12px 32px -18px rgba(20,33,61,.28)}
+.sheet-body{padding:2.25rem 2.5rem;font-size:.9375rem;line-height:1.85}
+.sheet-body p{margin-bottom:1.15rem}
+.sheet-title{text-align:center;font-weight:600;margin-bottom:1.75rem}
+
+/* ---- drop area ---- */
+.drop{border:1.5px dashed #B9C4D8;border-radius:4px;background:var(--paper);padding:1.5rem;
+      display:flex;align-items:center;gap:1rem}
+.drop:hover{border-color:var(--ink)}
+
+/* ---- buttons ---- */
+.btn-ink{background:var(--ink);color:#fff;border:1px solid var(--ink);font-weight:500;padding:.6rem 1.4rem;border-radius:3px}
+.btn-ink:hover{background:#0C1730;color:#fff}
+.btn-marker{background:var(--marker);color:var(--ink);border:1px solid var(--marker-deep);font-weight:600;padding:.6rem 1.4rem;border-radius:3px}
+.btn-marker:hover{background:var(--marker-deep)}
+.btn-quiet{background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:500;padding:.6rem 1.4rem;border-radius:3px}
+.btn-quiet:hover{border-color:var(--ink)}
+
+/* ---- steps: контент реально последовательный, поэтому нумерация уместна ---- */
+.step{display:flex;gap:1.1rem;padding:1.4rem 0;border-top:1px solid var(--rule)}
+.step-n{font-family:'JetBrains Mono',monospace;font-size:.8125rem;color:var(--muted);padding-top:.15rem;min-width:1.5rem}
+
+/* ---- workspace ---- */
+.app-top{background:var(--paper);border-bottom:1px solid var(--rule)}
+.brand{font-weight:700;letter-spacing:-.03em;font-size:1.125rem}
+.brand span{background:var(--marker);box-shadow:0 0 0 .16em var(--marker);border-radius:2px}
+.field-row{padding:.9rem 0;border-bottom:1px solid var(--rule)}
+.field-row:last-child{border-bottom:0}
+.field-path{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted)}
+.form-control,.form-select{border-radius:3px;border-color:var(--rule);font-size:.9375rem;padding:.5rem .7rem}
+.form-control:focus,.form-select:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(20,33,61,.08)}
+.group-head{font-size:.8125rem;font-weight:600;padding:.6rem 0;color:var(--muted)}
+.panel{background:var(--paper);border:1px solid var(--rule);border-radius:4px}
+
+/* ---- counters / admin ---- */
+.meter{height:5px;background:var(--rule);border-radius:3px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ink)}
+.tag{font-size:.75rem;padding:.2rem .55rem;border-radius:2px;border:1px solid var(--rule);color:var(--muted)}
+.tag-paid{background:var(--marker);border-color:var(--marker-deep);color:var(--ink);font-weight:600}
+table.tbl{font-size:.875rem;background:var(--paper)}
+table.tbl th{font-weight:600;font-size:.8125rem;color:var(--muted);border-bottom:1px solid var(--rule);padding:.7rem .9rem}
+table.tbl td{padding:.75rem .9rem;border-bottom:1px solid var(--rule);vertical-align:middle}
+
+a{color:var(--ink)}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.tok{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="viewer-bar">
+  <strong style="margin-right:1.5rem">Макет Doxen</strong>
+  <a href="#s1">Главная</a><a href="#s2">Заполнение</a><a href="#s3">Админка</a>
+</div>
+
+<!-- ============ ЭКРАН 1: ГЛАВНАЯ ============ -->
+<section id="s1">
+<div class="app-top">
+  <div class="container py-3 d-flex align-items-center">
+    <div class="brand me-auto">do<span>x</span>en.ru</div>
+    <a href="#" class="text-decoration-none me-4" style="font-size:.9375rem">Тарифы</a>
+    <a href="#" class="text-decoration-none me-4" style="font-size:.9375rem">Войти</a>
+    <a href="#" class="btn btn-ink btn-sm">Регистрация</a>
+  </div>
+</div>
+
+<div class="container py-5">
+  <div class="row g-5 align-items-center">
+    <div class="col-lg-6">
+      <h1 class="mb-4">Шаблон в Word<br>превращается в документ</h1>
+      <p class="lead-sm mb-4">Doxen находит в вашем <span class="mono">.docx</span> все переменные,
+        спрашивает значения и собирает готовый файл. Word на компьютере не нужен.
+        Шаблон и результат живут только в вашем браузере — на сервере не остаётся ничего.</p>
+
+      <div class="drop mb-3">
+        <div class="me-auto">
+          <div style="font-weight:500">Перетащите шаблон сюда</div>
+          <div style="font-size:.8125rem;color:var(--muted)">.docx до 10 МБ · без регистрации</div>
+        </div>
+        <button class="btn btn-quiet btn-sm">Выбрать файл</button>
+      </div>
+      <p style="font-size:.8125rem;color:var(--muted)">Покажем найденные переменные сразу.
+        Регистрация понадобится только чтобы скачать готовый документ.</p>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="sheet">
+        <div class="sheet-body">
+          <div class="sheet-title">ДОВЕРЕННОСТЬ № <span class="tok" data-fill="14/2026">{{doc.number}}</span></div>
+          <p>Общество с ограниченной ответственностью
+            <span class="tok" data-fill="«Рога и копыта»">{{org.name}}</span>,
+            ИНН <span class="tok" data-fill="7701234567">{{org.inn}}</span>,
+            в лице генерального директора
+            <span class="tok" data-fill="Сидорова И. П.">{{initialsEnd(org.director)}}</span>,
+            настоящей доверенностью уполномочивает</p>
+          <p><span class="tok" data-fill="Кузнецову Марию Алексеевну">{{agent.fullName}}</span>,
+            паспорт <span class="tok" data-fill="45 11 654321">{{agent.passport.series}}</span>,
+            представлять интересы Общества в отношениях с
+            <span class="tok" data-fill="ПАО «Сбербанк»">{{org.bank.bankName}}</span>.</p>
+          <p class="mb-0">Доверенность действительна до
+            <span class="tok" data-fill="31 декабря 2026 г.">{{doc.validUntil}}</span>.</p>
+        </div>
+      </div>
+      <p class="text-center mt-3" style="font-size:.8125rem;color:var(--muted)">
+        Жёлтым отмечено то, что Doxen попросит заполнить</p>
+    </div>
+  </div>
+</div>
+
+<div class="container py-5">
+  <div class="row g-5">
+    <div class="col-lg-5">
+      <h2 class="mb-3">Как это работает</h2>
+      <p class="lead-sm">Три шага. Со второго раза — два: файл ответов подставит всё,
+        что вы уже вводили.</p>
+    </div>
+    <div class="col-lg-7">
+      <div class="step">
+        <div class="step-n">1</div>
+        <div>
+          <h3>Загрузите шаблон</h3>
+          <p class="mb-0" style="color:var(--muted);font-size:.9375rem">Обычный <span class="mono">.docx</span>,
+            где вместо значений стоят переменные вида <span class="mono">{{org.inn}}</span>.
+            Doxen прочитает их все, включая те, что внутри таблиц и колонтитулов.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">2</div>
+        <div>
+          <h3>Заполните значения</h3>
+          <p class="mb-0" style="color:var(--muted);font-size:.9375rem">Вручную в форме — или загрузите файл
+            ответов с прошлого раза. Что найдётся в файле, подставится само;
+            спросим только про остальное.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">3</div>
+        <div>
+          <h3>Заберите документ и файл ответов</h3>
+          <p class="mb-0" style="color:var(--muted);font-size:.9375rem">Документ готов к печати.
+            Файл ответов сохраните у себя: в следующий раз правится в любом текстовом редакторе
+            и загружается обратно.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============ ЭКРАН 2: ЗАПОЛНЕНИЕ ============ -->
+<section id="s2" style="background:var(--surface);border-top:1px solid var(--rule)">
+<div class="container"><div class="screen-label">Экран 2 — заполнение перед сборкой</div></div>
+
+<div class="app-top">
+  <div class="container py-2 d-flex align-items-center">
+    <div class="brand me-4">do<span>x</span>en.ru</div>
+    <div style="font-size:.9375rem;color:var(--muted)" class="me-auto">Доверенность на банк.docx</div>
+    <div class="text-end me-4" style="min-width:180px">
+      <div style="font-size:.75rem;color:var(--muted)">7 из 20 документов за август</div>
+      <div class="meter mt-1"><i style="width:35%"></i></div>
+    </div>
+    <span class="tag">Free</span>
+  </div>
+</div>
+
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="panel p-4">
+        <div class="d-flex align-items-start mb-3">
+          <div class="me-auto">
+            <h2 style="font-size:1.35rem" class="mb-1">Осталось заполнить 6 значений</h2>
+            <p class="mb-0" style="font-size:.875rem;color:var(--muted)">
+              Три подставились из файла ответов, который вы загрузили.</p>
+          </div>
+          <button class="btn btn-quiet btn-sm">Загрузить ответы</button>
+        </div>
+
+        <div class="group-head">Организация</div>
+        <div class="field-row">
+          <label class="d-block mb-1" style="font-size:.9375rem">Наименование</label>
+          <div class="field-path mb-2">org.name</div>
+          <input class="form-control" value="ООО «Рога и копыта»" readonly
+                 style="background:#F8FAFC;color:var(--muted)">
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.35rem">из файла ответов</div>
+        </div>
+        <div class="field-row">
+          <label class="d-block mb-1" style="font-size:.9375rem">ИНН</label>
+          <div class="field-path mb-2">org.inn</div>
+          <input class="form-control" placeholder="10 цифр" inputmode="numeric">
+        </div>
+        <div class="field-row">
+          <label class="d-block mb-1" style="font-size:.9375rem">Банк</label>
+          <div class="field-path mb-2">org.bank.bankName</div>
+          <input class="form-control" placeholder="Например: ПАО «Сбербанк»">
+        </div>
+
+        <div class="group-head mt-3">Директор</div>
+        <div class="field-row">
+          <label class="d-block mb-1" style="font-size:.9375rem">Имя, отчество, фамилия</label>
+          <div class="field-path mb-2">org.director — нужно для initialsEnd()</div>
+          <div class="row g-2">
+            <div class="col-4"><input class="form-control" placeholder="Иван"></div>
+            <div class="col-4"><input class="form-control" placeholder="Петрович"></div>
+            <div class="col-4"><input class="form-control" placeholder="Сидоров"></div>
+          </div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.35rem">
+            В документе будет: Сидоров И. П.</div>
+        </div>
+
+        <div class="group-head mt-3">Документ</div>
+        <div class="field-row">
+          <label class="d-block mb-1" style="font-size:.9375rem">Действительна до</label>
+          <div class="field-path mb-2">doc.validUntil</div>
+          <div class="d-flex align-items-center gap-3">
+            <input type="date" class="form-control" style="max-width:200px" value="2026-12-31">
+            <div class="form-check mb-0">
+              <input class="form-check-input" type="checkbox" id="nd">
+              <label class="form-check-label" for="nd" style="font-size:.875rem">Без даты</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3 pt-4">
+          <button class="btn btn-marker">Собрать документ</button>
+          <button class="btn btn-quiet">Скачать файл ответов</button>
+          <span class="ms-auto" style="font-size:.8125rem;color:var(--muted)">12 подстановок</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="sheet">
+        <div class="sheet-body" style="font-size:.875rem;line-height:1.8">
+          <div class="sheet-title" style="font-size:.9375rem">ДОВЕРЕННОСТЬ № 14/2026</div>
+          <p>Общество с ограниченной ответственностью «Рога и копыта»,
+            ИНН <span class="tok">{{org.inn}}</span>, в лице генерального директора
+            <span class="tok">{{initialsEnd(org.director)}}</span>, настоящей доверенностью
+            уполномочивает</p>
+          <p>Кузнецову Марию Алексеевну, паспорт 45 11 654321, представлять интересы
+            Общества в отношениях с <span class="tok">{{org.bank.bankName}}</span>.</p>
+          <p class="mb-0">Доверенность действительна до 31 декабря 2026 г.</p>
+        </div>
+      </div>
+      <p class="text-center mt-3" style="font-size:.8125rem;color:var(--muted)">
+        Предпросмотр обновляется по мере заполнения</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============ ЭКРАН 3: АДМИНКА ============ -->
+<section id="s3" style="border-top:1px solid var(--rule)">
+<div class="container"><div class="screen-label">Экран 3 — админка</div></div>
+
+<div class="app-top">
+  <div class="container py-2 d-flex align-items-center">
+    <div class="brand me-4">do<span>x</span>en.ru</div>
+    <div style="font-size:.9375rem;color:var(--muted)">Администрирование</div>
+  </div>
+</div>
+
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <h2 style="font-size:1.35rem" class="mb-3">Пользователи</h2>
+      <div class="panel">
+        <table class="tbl w-100 mb-0">
+          <thead><tr>
+            <th>Почта</th><th>Тариф</th><th>Документов в августе</th><th>Регистрация</th>
+          </tr></thead>
+          <tbody>
+            <tr><td>a.morozov@lex-partners.ru</td><td><span class="tag tag-paid">Pro</span></td>
+                <td>184</td><td>12.03.2026</td></tr>
+            <tr><td>buh@stroytorg.ru</td><td><span class="tag">Free</span></td>
+                <td>7</td><td>04.08.2026</td></tr>
+            <tr><td>i.kotova@mail.ru</td><td><span class="tag">Free</span></td>
+                <td>20 — лимит исчерпан</td><td>28.07.2026</td></tr>
+            <tr><td>docs@alfa-invest.ru</td><td><span class="tag tag-paid">Pro</span></td>
+                <td>66</td><td>19.05.2026</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <h2 style="font-size:1.35rem" class="mb-3">Тарифы</h2>
+      <div class="panel p-3 mb-3">
+        <div class="d-flex align-items-center mb-3">
+          <span class="tag me-auto">Free</span>
+          <span style="font-size:.875rem;color:var(--muted)">0 ₽</span>
+        </div>
+        <label class="d-block mb-1" style="font-size:.8125rem;color:var(--muted)">Документов в месяц</label>
+        <input class="form-control form-control-sm mb-2" value="20">
+        <label class="d-block mb-1" style="font-size:.8125rem;color:var(--muted)">Переменных в шаблоне</label>
+        <input class="form-control form-control-sm mb-2" value="50">
+        <label class="d-block mb-1" style="font-size:.8125rem;color:var(--muted)">Размер файла, МБ</label>
+        <input class="form-control form-control-sm" value="10">
+      </div>
+      <div class="panel p-3">
+        <div class="d-flex align-items-center mb-3">
+          <span class="tag tag-paid me-auto">Pro</span>
+          <span style="font-size:.875rem;color:var(--muted)">690 ₽ / мес</span>
+        </div>
+        <label class="d-block mb-1" style="font-size:.8125rem;color:var(--muted)">Документов в месяц</label>
+        <input class="form-control form-control-sm mb-2" value="1000">
+        <label class="d-block mb-1" style="font-size:.8125rem;color:var(--muted)">Переменных в шаблоне</label>
+        <input class="form-control form-control-sm mb-2" value="500">
+        <label class="d-block mb-1" style="font-size:.8125rem;color:var(--muted)">Размер файла, МБ</label>
+        <input class="form-control form-control-sm" value="50">
+      </div>
+      <button class="btn btn-ink btn-sm mt-3 w-100">Сохранить тарифы</button>
+    </div>
+  </div>
+</div>
+</section>
+
+<div class="container py-5"></div>
+
+<script>
+// Единственная анимация на странице: один раз показываем, что делает Doxen —
+// подсвеченные переменные заменяются значениями.
+(function(){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const toks = document.querySelectorAll('#s1 .sheet .tok[data-fill]');
+  setTimeout(() => {
+    toks.forEach((t, i) => setTimeout(() => {
+      t.textContent = t.dataset.fill;
+      t.classList.add('filled');
+    }, i * 260));
+  }, 1100);
+})();
+</script>
+</body>
+</html>
