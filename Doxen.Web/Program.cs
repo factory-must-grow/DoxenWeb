@@ -79,7 +79,10 @@ builder.Services.ConfigureApplicationCookie(o =>
 builder.Services.AddSingleton(new Db(connectionString));
 builder.Services.AddSingleton<PlanRepository>();
 builder.Services.AddSingleton<UserProfileRepository>();
+builder.Services.AddSingleton<UsageRepository>();
+builder.Services.AddSingleton<GenerationLogRepository>();
 builder.Services.AddScoped<CurrentPlanResolver>();
+builder.Services.AddScoped<LimitChecker>();
 
 var app = builder.Build();
 

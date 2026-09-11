@@ -121,9 +121,19 @@
                 }
 
                 <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
-                    <button type="submit" class="btn btn-warning" asp-page-handler="Generate">
-                        @(Model.State.Datasets.Count > 1 ? "Собрать документы" : "Собрать документ")
-                    </button>
+                    @if (Model.AwaitingPartialBatchCount is { } allowed)
+                    {
+                        <button type="submit" class="btn btn-warning" asp-page-handler="Generate"
+                                asp-route-confirmPartialBatch="true">
+                            Собрать доступные @allowed
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-warning" asp-page-handler="Generate">
+                            @(Model.State.Datasets.Count > 1 ? "Собрать документы" : "Собрать документ")
+                        </button>
+                    }
                     <button type="submit" class="btn btn-outline-secondary" asp-page-handler="DownloadAnswers">
                         Скачать файл ответов
                     </button>

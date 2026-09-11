@@ -3,8 +3,10 @@ using System.Text.Json;
 using Doxen.Data;
 using Doxen.Engine;
 using Doxen.Engine.Models;
+using Doxen.Web.Data;
 using Doxen.Web.Models;
 using Doxen.Web.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -15,13 +17,22 @@ public class GenerateModel : PageModel
     private readonly TemplateCache _templateCache;
     private readonly GenerateSessionStore _sessionStore;
     private readonly CurrentPlanResolver _planResolver;
+    private readonly LimitChecker _limitChecker;
+    private readonly UsageRepository _usageRepository;
+    private readonly GenerationLogRepository _generationLogRepository;
+    private readonly UserManager<DoxenUser> _userManager;
 
     public GenerateModel(TemplateCache templateCache, GenerateSessionStore sessionStore,
-        CurrentPlanResolver planResolver)
+        CurrentPlanResolver planResolver, LimitChecker limitChecker, UsageRepository usageRepository,
+        GenerationLogRepository generationLogRepository, UserManager<DoxenUser> userManager)
     {
         _templateCache = templateCache;
         _sessionStore = sessionStore;
         _planResolver = planResolver;
+        _limitChecker = limitChecker;
+        _usageRepository = usageRepository;
+        _generationLogRepository = generationLogRepository;
+        _userManager = userManager;
     }
 
     [BindProperty]
@@ -29,6 +40,9 @@ public class GenerateModel : PageModel
 
     [BindProperty]
     public IFormFile? AnswersUpload { get; set; }
+
+    [BindProperty]
+    public bool ConfirmPartialBatch { get; set; }
 
     public GenerateState State { get; private set; } = new();
     public bool TemplateMissing { get; private set; }
@@ -38,6 +52,7 @@ public class GenerateModel : PageModel
     public List<FieldViewModel> TableColumns { get; private set; } = new();
     public int ResolvedCount { get; private set; }
     public int TotalCount { get; private set; }
+    public int? AwaitingPartialBatchCount { get; private set; }
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -85,10 +100,11 @@ public class GenerateModel : PageModel
         }
 
         var plan = await _planResolver.ResolveAsync(User);
-        var maxBytes = (long)plan.MaxFileSizeMb * 1024 * 1024;
-        if (TemplateUpload.Length > maxBytes)
+
+        var sizeError = await _limitChecker.CheckFileSizeAsync(TemplateUpload.Length, plan);
+        if (sizeError is not null)
         {
-            ErrorMessage = $"Файл больше {plan.MaxFileSizeMb} МБ. На тарифе «{plan.Name}» это предел.";
+            ErrorMessage = sizeError;
             await BuildViewAsync();
             return Page();
         }
@@ -107,6 +123,14 @@ public class GenerateModel : PageModel
             if (variables.Count == 0)
             {
                 ErrorMessage = "В этом шаблоне нет ни одной переменной вида {{...}}. Проверьте, что вы загрузили нужный файл.";
+                await BuildViewAsync();
+                return Page();
+            }
+
+            var variableCountError = _limitChecker.CheckVariableCount(variables.Count, plan);
+            if (variableCountError is not null)
+            {
+                ErrorMessage = variableCountError;
                 await BuildViewAsync();
                 return Page();
             }
@@ -302,35 +326,93 @@ public class GenerateModel : PageModel
             isBatch = false;
         }
 
+        var datasetsToGenerate = state.Datasets;
+        var documentsNeeded = isBatch ? state.Datasets.Count : 1;
+
+        var userId = _userManager.GetUserId(User);
+        if (userId is null || !long.TryParse(userId, out var userIdLong))
+        {
+            ErrorMessage = "Не удалось определить учётную запись. Войдите ещё раз.";
+            return null;
+        }
+
+        // 3. Документов за месяц — перед генерацией. При пакете считается
+        // весь пакет целиком: не хватает — не собирать частично, а спросить
+        // (05-screens.md).
+        var monthly = await _limitChecker.CheckMonthlyDocumentsAsync(userIdLong, documentsNeeded, plan);
+        if (!monthly.Allowed)
+        {
+            if (monthly.RequiresConfirmation && ConfirmPartialBatch)
+            {
+                datasetsToGenerate = state.Datasets.Take(monthly.AllowedDocuments).ToList();
+                documentsNeeded = datasetsToGenerate.Count;
+            }
+            else
+            {
+                ErrorMessage = monthly.Message;
+                AwaitingPartialBatchCount = monthly.RequiresConfirmation ? monthly.AllowedDocuments : null;
+                return null;
+            }
+        }
+
         var baseName = string.IsNullOrEmpty(state.TemplateFileName)
             ? "document"
             : Path.GetFileNameWithoutExtension(state.TemplateFileName);
 
+        var variablesCount = CountVariables(uploaded.Bytes);
+
         if (!isBatch)
         {
             var merged = MergeSharedAndFirstDataset(state);
-            using var templateStream = new MemoryStream(uploaded.Bytes, writable: false);
-            var result = TemplateGenerator.Generate(templateStream, merged);
+
+            GenerationResult result;
+            try
+            {
+                using var templateStream = new MemoryStream(uploaded.Bytes, writable: false);
+                result = TemplateGenerator.Generate(templateStream, merged);
+            }
+            catch (Exception)
+            {
+                await _generationLogRepository.InsertAsync(userIdLong, uploaded.Bytes.Length, 0, variablesCount, 0,
+                    succeeded: false, "Ошибка при сборке документа.");
+                ErrorMessage = "Не удалось собрать документ. Попробуйте ещё раз.";
+                return null;
+            }
+
+            await _usageRepository.IncrementAsync(userIdLong, DateTimeOffset.UtcNow.Year, DateTimeOffset.UtcNow.Month,
+                1, result.SubstitutionCount);
+            await _generationLogRepository.InsertAsync(userIdLong, uploaded.Bytes.Length, 1, variablesCount,
+                result.SubstitutionCount, succeeded: true, errorMessage: null);
 
             return File(result.Document,
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 $"{baseName}.docx");
         }
 
-        var answersRoot = BuildAnswersRoot(state);
+        var answersRoot = BuildAnswersRoot(state, datasetsToGenerate);
         using var batchTemplateStream = new MemoryStream(uploaded.Bytes, writable: false);
         var batchResults = TemplateGenerator.GenerateBatch(batchTemplateStream, answersRoot);
+
+        var succeededResults = batchResults.Where(r => r.Document is not null).ToList();
+        var substitutionsTotal = succeededResults.Sum(r => (long)r.SubstitutionCount);
+
+        if (succeededResults.Count > 0)
+        {
+            await _usageRepository.IncrementAsync(userIdLong, DateTimeOffset.UtcNow.Year, DateTimeOffset.UtcNow.Month,
+                succeededResults.Count, substitutionsTotal);
+        }
+
+        var failedCount = batchResults.Count - succeededResults.Count;
+        await _generationLogRepository.InsertAsync(userIdLong, uploaded.Bytes.Length, succeededResults.Count,
+            variablesCount, substitutionsTotal,
+            succeeded: succeededResults.Count > 0,
+            errorMessage: failedCount > 0 ? $"Не удалось собрать {failedCount} из {batchResults.Count} документов." : null);
 
         using var zipStream = new MemoryStream();
         using (var archive = new System.IO.Compression.ZipArchive(zipStream, System.IO.Compression.ZipArchiveMode.Create, true))
         {
-            foreach (var item in batchResults)
+            foreach (var item in succeededResults)
             {
-                if (item.Document is null)
-                {
-                    continue;
-                }
-
                 var entry = archive.CreateEntry(SanitizeFileName(item.Title) + ".docx");
                 await using var entryStream = entry.Open();
                 await entryStream.WriteAsync(item.Document);
@@ -339,6 +421,19 @@ public class GenerateModel : PageModel
 
         zipStream.Position = 0;
         return File(zipStream.ToArray(), "application/zip", $"{baseName}.zip");
+    }
+
+    private static int CountVariables(byte[] templateBytes)
+    {
+        try
+        {
+            using var stream = new MemoryStream(templateBytes, writable: false);
+            return TemplateParser.Parse(stream).Count;
+        }
+        catch (TemplateFormatException)
+        {
+            return 0;
+        }
     }
 
     private static string SanitizeFileName(string title)
@@ -385,7 +480,7 @@ public class GenerateModel : PageModel
         }
     }
 
-    private static JsonElement BuildAnswersRoot(GenerateState state)
+    private static JsonElement BuildAnswersRoot(GenerateState state, IReadOnlyList<DatasetRowState> datasetsToInclude)
     {
         var root = new System.Text.Json.Nodes.JsonObject
         {
@@ -393,7 +488,7 @@ public class GenerateModel : PageModel
         };
 
         var datasets = new System.Text.Json.Nodes.JsonArray();
-        foreach (var row in state.Datasets)
+        foreach (var row in datasetsToInclude)
         {
             var item = new System.Text.Json.Nodes.JsonObject
             {

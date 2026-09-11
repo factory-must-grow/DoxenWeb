@@ -13,14 +13,16 @@ public class IndexModel : PageModel
     private readonly GenerateSessionStore _sessionStore;
     private readonly AnonymousRateLimiter _rateLimiter;
     private readonly CurrentPlanResolver _planResolver;
+    private readonly LimitChecker _limitChecker;
 
     public IndexModel(TemplateCache templateCache, GenerateSessionStore sessionStore,
-        AnonymousRateLimiter rateLimiter, CurrentPlanResolver planResolver)
+        AnonymousRateLimiter rateLimiter, CurrentPlanResolver planResolver, LimitChecker limitChecker)
     {
         _templateCache = templateCache;
         _sessionStore = sessionStore;
         _rateLimiter = rateLimiter;
         _planResolver = planResolver;
+        _limitChecker = limitChecker;
     }
 
     [BindProperty]
@@ -60,10 +62,11 @@ public class IndexModel : PageModel
         }
 
         var plan = await _planResolver.ResolveAsync(User);
-        var maxBytes = (long)plan.MaxFileSizeMb * 1024 * 1024;
-        if (Template.Length > maxBytes)
+
+        var sizeError = await _limitChecker.CheckFileSizeAsync(Template.Length, plan);
+        if (sizeError is not null)
         {
-            UploadError = $"Файл больше {plan.MaxFileSizeMb} МБ. На тарифе «{plan.Name}» это предел.";
+            UploadError = sizeError;
             return Page();
         }
 
@@ -98,6 +101,13 @@ public class IndexModel : PageModel
         if (variables.Count == 0)
         {
             UploadError = "В этом шаблоне нет ни одной переменной вида {{...}}. Проверьте, что вы загрузили нужный файл.";
+            return Page();
+        }
+
+        var variableCountError = _limitChecker.CheckVariableCount(variables.Count, plan);
+        if (variableCountError is not null)
+        {
+            UploadError = variableCountError;
             return Page();
         }
 
