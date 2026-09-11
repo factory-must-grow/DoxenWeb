@@ -9,7 +9,17 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("Doxen")
     ?? throw new InvalidOperationException("Не задана строка подключения ConnectionStrings:Doxen.");
 
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages(o =>
+{
+    // Всё под /admin закрыто политикой на уровне папки, а не проверками
+    // в каждой странице по отдельности (05-screens.md).
+    o.Conventions.AuthorizeFolder("/Admin", "AdminOnly");
+});
+
+builder.Services.AddAuthorization(o =>
+{
+    o.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+});
 
 builder.Services.AddMemoryCache(o =>
     o.SizeLimit = builder.Configuration.GetValue("Doxen:TemplateCacheSizeBytes", 2_000_000_000L));
@@ -44,6 +54,8 @@ builder.Services.ConfigureApplicationCookie(o =>
 
 // Бизнес-таблицы Doxen — только чистый Npgsql, без ORM.
 builder.Services.AddSingleton(new Db(connectionString));
+builder.Services.AddSingleton<PlanRepository>();
+builder.Services.AddSingleton<UserProfileRepository>();
 
 var app = builder.Build();
 
