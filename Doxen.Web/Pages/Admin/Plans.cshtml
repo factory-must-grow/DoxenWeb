@@ -1,0 +1,107 @@
+@page
+@model Doxen.Web.Pages.Admin.PlansModel
+@{
+    ViewData["Title"] = "Тарифы";
+}
+
+<h1>Тарифы</h1>
+
+<p><a asp-page="/Admin/Index">Админка</a> / <a asp-page="/Admin/Users">Пользователи</a></p>
+
+@if (Model.ErrorMessage is not null)
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle">
+        <thead>
+            <tr>
+                <th>Код</th>
+                <th>Название</th>
+                <th>Цена, ₽</th>
+                <th>Документов/мес</th>
+                <th>Переменных/шаблон</th>
+                <th>Размер файла, МБ</th>
+                <th>Пакет</th>
+                <th>Активен</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var plan in Model.Plans)
+            {
+                var updateFormId = $"plan-update-{plan.Id}";
+                var deleteFormId = $"plan-delete-{plan.Id}";
+                <tr>
+                    <td><code>@plan.Code</code></td>
+                    <td><input form="@updateFormId" type="text" name="name" value="@plan.Name" class="form-control form-control-sm" required /></td>
+                    <td><input form="@updateFormId" type="number" name="priceRub" value="@plan.PriceRub" min="0" class="form-control form-control-sm" style="width: 100px;" /></td>
+                    <td><input form="@updateFormId" type="number" name="maxDocumentsPerMonth" value="@plan.MaxDocumentsPerMonth" min="0" class="form-control form-control-sm" style="width: 110px;" /></td>
+                    <td><input form="@updateFormId" type="number" name="maxVariablesPerTemplate" value="@plan.MaxVariablesPerTemplate" min="0" class="form-control form-control-sm" style="width: 110px;" /></td>
+                    <td><input form="@updateFormId" type="number" name="maxFileSizeMb" value="@plan.MaxFileSizeMb" min="0" class="form-control form-control-sm" style="width: 90px;" /></td>
+                    <td class="text-center">
+                        <input form="@updateFormId" type="checkbox" name="allowBatch" value="true" class="form-check-input" checked="@plan.AllowBatch" />
+                    </td>
+                    <td class="text-center">
+                        <input form="@updateFormId" type="checkbox" name="isActive" value="true" class="form-check-input" checked="@plan.IsActive" />
+                    </td>
+                    <td class="text-nowrap">
+                        <button form="@updateFormId" type="submit" class="btn btn-sm btn-outline-primary">Сохранить</button>
+                        <button form="@deleteFormId" type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@* <form> не может быть родителем <td>/строкой внутри <tbody> — поля
+   в таблице выше связаны с формами здесь через атрибут form= (валидно
+   для HTML5), сами формы вынесены за пределы таблицы. *@
+@foreach (var plan in Model.Plans)
+{
+    <form id="plan-update-@plan.Id" method="post" asp-page-handler="Update" asp-route-id="@plan.Id"></form>
+    <form id="plan-delete-@plan.Id" method="post" asp-page-handler="Delete" asp-route-id="@plan.Id"
+          onsubmit="return confirm('Удалить тариф «@plan.Name»?');"></form>
+}
+
+<h2 class="h5 mt-4">Добавить тариф</h2>
+
+<form method="post" asp-page-handler="Create" class="row g-2" style="max-width: 900px;">
+    <div class="col-md-2">
+        <label class="form-label">Код</label>
+        <input type="text" asp-for="NewPlan.Code" class="form-control" placeholder="pro" required />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Название</label>
+        <input type="text" asp-for="NewPlan.Name" class="form-control" placeholder="Pro" required />
+    </div>
+    <div class="col-md-1">
+        <label class="form-label">Цена, ₽</label>
+        <input type="number" asp-for="NewPlan.PriceRub" class="form-control" min="0" />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Документов/мес</label>
+        <input type="number" asp-for="NewPlan.MaxDocumentsPerMonth" class="form-control" min="0" />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Переменных/шаблон</label>
+        <input type="number" asp-for="NewPlan.MaxVariablesPerTemplate" class="form-control" min="0" />
+    </div>
+    <div class="col-md-1">
+        <label class="form-label">Файл, МБ</label>
+        <input type="number" asp-for="NewPlan.MaxFileSizeMb" class="form-control" min="0" />
+    </div>
+    <div class="col-md-1 form-check mt-4">
+        <input type="checkbox" asp-for="NewPlan.AllowBatch" class="form-check-input" />
+        <label class="form-check-label" asp-for="NewPlan.AllowBatch">Пакет</label>
+    </div>
+    <div class="col-md-1 form-check mt-4">
+        <input type="checkbox" asp-for="NewPlan.IsActive" class="form-check-input" />
+        <label class="form-check-label" asp-for="NewPlan.IsActive">Активен</label>
+    </div>
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Добавить</button>
+    </div>
+</form>
