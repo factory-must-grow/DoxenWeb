@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Doxen.Data\Doxen.Data.csproj" />
+    <ProjectReference Include="..\Doxen.Engine\Doxen.Engine.csproj" />
   </ItemGroup>
 
   <ItemGroup>

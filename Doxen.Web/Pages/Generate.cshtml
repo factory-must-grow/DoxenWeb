@@ -1,0 +1,150 @@
+@page
+@using Doxen.Engine
+@using Doxen.Web.Services
+@model Doxen.Web.Pages.GenerateModel
+@{
+    ViewData["Title"] = "Заполнение документа";
+}
+
+<h1>Заполнение документа</h1>
+
+@if (Model.ErrorMessage is not null)
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+@if (Model.InfoMessage is not null)
+{
+    <div class="alert alert-info">@Model.InfoMessage</div>
+}
+
+@if (Model.State.TemplateCacheKey is null || Model.TemplateMissing)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5">
+                @(Model.TemplateMissing ? "Выберите файл ещё раз" : "Загрузите шаблон")
+            </h2>
+            <form method="post" enctype="multipart/form-data" asp-page-handler="UploadTemplate">
+                <div class="mb-3">
+                    <input asp-for="TemplateUpload" type="file" class="form-control" accept=".docx" />
+                </div>
+                <button type="submit" class="btn btn-primary">Загрузить</button>
+            </form>
+        </div>
+    </div>
+}
+
+@if (Model.State.TemplateCacheKey is not null && !Model.TemplateMissing)
+{
+    <div class="row">
+        <div class="col-lg-8">
+            <form method="post" asp-page-handler="Save">
+                @{ ViewData["BatchMode"] = Model.State.BatchMode; }
+                @foreach (var group in Model.SharedGroups)
+                {
+                    <fieldset class="card mb-3">
+                        <div class="card-body">
+                            <legend class="h6">@group.Title</legend>
+                            @foreach (var field in group.Fields)
+                            {
+                                <partial name="_GenerateField" model="field" />
+                            }
+                        </div>
+                    </fieldset>
+                }
+
+                @if (Model.State.BatchMode)
+                {
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <legend class="h6">По каждому документу</legend>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm" id="dataset-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Документ</th>
+                                            @foreach (var column in Model.TableColumns)
+                                            {
+                                                <th>
+                                                    {{@column.Variable.Path}}
+                                                    <button type="submit" class="btn btn-sm btn-link p-0 d-block"
+                                                            asp-page-handler="MoveField"
+                                                            asp-route-path="@column.Variable.Path"
+                                                            asp-route-toPerDocument="false">
+                                                        общее для всех
+                                                    </button>
+                                                </th>
+                                            }
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (var rowIndex = 0; rowIndex < Model.State.Datasets.Count; rowIndex++)
+                                        {
+                                            var row = Model.State.Datasets[rowIndex];
+                                            <tr>
+                                                <td>
+                                                    <input type="text" class="form-control form-control-sm"
+                                                           name="dstitle|@rowIndex" value="@row.Title"
+                                                           placeholder="Документ @(rowIndex + 1)" />
+                                                </td>
+                                                @foreach (var column in Model.TableColumns)
+                                                {
+                                                    var cellValue = ValueResolver.Resolve(
+                                                        JsonPathBuilder.ToElement(row.ValuesJson), column.Variable.Path);
+                                                    <td>
+                                                        <input type="text" class="form-control form-control-sm dataset-cell"
+                                                               name="ds|@rowIndex|@column.Variable.Path"
+                                                               value="@(cellValue.Status == Doxen.Engine.Models.ResolveStatus.Resolved ? cellValue.Value : "")"
+                                                               data-row="@rowIndex" />
+                                                    </td>
+                                                }
+                                                <td>
+                                                    @if (Model.State.Datasets.Count > 1)
+                                                    {
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                                asp-page-handler="RemoveRow" asp-route-index="@rowIndex">
+                                                            ✕
+                                                        </button>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="text-muted small">
+                                В таблицу можно вставить диапазон, скопированный из Excel — выделите первую ячейку и нажмите Ctrl+V.
+                            </p>
+                        </div>
+                    </div>
+                }
+
+                <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
+                    <button type="submit" class="btn btn-warning" asp-page-handler="Generate">
+                        @(Model.State.Datasets.Count > 1 ? "Собрать документы" : "Собрать документ")
+                    </button>
+                    <button type="submit" class="btn btn-outline-secondary" asp-page-handler="DownloadAnswers">
+                        Скачать файл ответов
+                    </button>
+                    <button type="submit" class="btn btn-outline-secondary" asp-page-handler="AddRow">
+                        Добавить ещё документ
+                    </button>
+                    <span class="text-muted ms-auto">Заполнено: @Model.ResolvedCount из @Model.TotalCount</span>
+                </div>
+            </form>
+
+            <form method="post" enctype="multipart/form-data" asp-page-handler="UploadAnswers" class="mb-4">
+                <label class="form-label">Загрузить файл ответов</label>
+                <div class="input-group" style="max-width: 480px;">
+                    <input asp-for="AnswersUpload" type="file" class="form-control" accept=".json" />
+                    <button type="submit" class="btn btn-outline-secondary">Загрузить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="~/js/generate.js" asp-append-version="true"></script>
+}
