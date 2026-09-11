@@ -21,8 +21,31 @@ builder.Services.AddAuthorization(o =>
     o.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
 });
 
-builder.Services.AddMemoryCache(o =>
-    o.SizeLimit = builder.Configuration.GetValue("Doxen:TemplateCacheSizeBytes", 2_000_000_000L));
+var templateCacheOptions = new TemplateCacheOptions
+{
+    BudgetBytes = builder.Configuration.GetValue("Doxen:TemplateCacheSizeBytes", 2_000_000_000L),
+    SoftLimitPercent = builder.Configuration.GetValue("Doxen:SoftLimitPercent", 75),
+    HardLimitPercent = builder.Configuration.GetValue("Doxen:HardLimitPercent", 90),
+    FreeUserWaitSeconds = builder.Configuration.GetValue("Doxen:FreeUserWaitSeconds", 20),
+    MaxQueuedFreeUsers = builder.Configuration.GetValue("Doxen:MaxQueuedFreeUsers", 50),
+    LifetimeHours = builder.Configuration.GetValue("Doxen:TemplateCacheLifetimeHours", 2),
+};
+
+builder.Services.AddMemoryCache(o => o.SizeLimit = templateCacheOptions.BudgetBytes);
+builder.Services.AddSingleton(templateCacheOptions);
+builder.Services.AddSingleton<TemplateCache>();
+builder.Services.AddSingleton<GenerateSessionStore>();
+builder.Services.AddSingleton<AnonymousRateLimiter>();
+
+// Состояние экрана заполнения — в сессии, шаблон отдельно в TemplateCache.
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(o =>
+{
+    o.Cookie.HttpOnly = true;
+    o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    o.Cookie.SameSite = SameSiteMode.Lax;
+    o.IdleTimeout = TimeSpan.FromHours(2);
+});
 
 // EF Core обслуживает только таблицы Identity — см. AuthDbContext.
 builder.Services.AddDbContext<AuthDbContext>(o => o.UseNpgsql(connectionString));
@@ -56,6 +79,7 @@ builder.Services.ConfigureApplicationCookie(o =>
 builder.Services.AddSingleton(new Db(connectionString));
 builder.Services.AddSingleton<PlanRepository>();
 builder.Services.AddSingleton<UserProfileRepository>();
+builder.Services.AddScoped<CurrentPlanResolver>();
 
 var app = builder.Build();
 
@@ -85,6 +109,8 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseSession();
 
 app.UseAuthentication();
 app.UseAuthorization();

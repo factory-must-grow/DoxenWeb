@@ -26,12 +26,18 @@ public class RegisterModel : PageModel
     [BindProperty]
     public InputModel Input { get; set; } = new();
 
+    [BindProperty(SupportsGet = true)]
+    public string? ReturnUrl { get; set; }
+
     public void OnGet(string? returnUrl = null)
     {
+        ReturnUrl = returnUrl;
     }
 
-    public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
+    public async Task<IActionResult> OnPostAsync()
     {
+        var returnUrl = ReturnUrl;
+
         if (!ModelState.IsValid)
         {
             return Page();

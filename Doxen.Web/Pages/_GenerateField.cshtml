@@ -1,0 +1,71 @@
+@model Doxen.Web.Models.FieldViewModel
+@{
+    var batchMode = ViewData["BatchMode"] as bool? ?? false;
+    var prefix = Model.IsPerDocument ? "ds|0|" : "shared|";
+    var fieldId = "f_" + Model.Variable.Path.Replace('.', '_');
+}
+
+<div class="mb-3">
+    <label class="form-label" for="@fieldId">@Model.Variable.Path</label>
+
+    @switch (Model.Kind)
+    {
+        case Doxen.Web.Services.FieldKind.Person:
+            <div class="row g-2">
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Имя"
+                           name="@(prefix + Model.FirstNamePath)" value="@Model.FirstName" />
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Отчество"
+                           name="@(prefix + Model.MiddleNamePath)" value="@Model.MiddleName" />
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Фамилия"
+                           name="@(prefix + Model.LastNamePath)" value="@Model.LastName" />
+                </div>
+            </div>
+            break;
+
+        case Doxen.Web.Services.FieldKind.Date:
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <input type="date" id="@fieldId" class="form-control date-toggle" style="max-width: 220px;"
+                       name="@(prefix + Model.Variable.Path)" value="@Model.Value" />
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="@(fieldId)_nodate"
+                           name="@("nodate|" + Model.Variable.Path)" />
+                    <label class="form-check-label" for="@(fieldId)_nodate">Без даты</label>
+                </div>
+                <a href="#" class="small date-manual-toggle" data-target="@fieldId">ввести вручную</a>
+            </div>
+            break;
+
+        case Doxen.Web.Services.FieldKind.Number:
+            <input type="text" inputmode="numeric" id="@fieldId" class="form-control"
+                   name="@(prefix + Model.Variable.Path)" value="@Model.Value" />
+            break;
+
+        default:
+            <input type="text" id="@fieldId" class="form-control"
+                   name="@(prefix + Model.Variable.Path)" value="@Model.Value" />
+            break;
+    }
+
+    @if (batchMode)
+    {
+        if (Model.IsPerDocument)
+        {
+            <button type="submit" class="btn btn-sm btn-link p-0 mt-1"
+                    asp-page-handler="MoveField" asp-route-path="@Model.Variable.Path" asp-route-toPerDocument="false">
+                общее для всех
+            </button>
+        }
+        else
+        {
+            <button type="submit" class="btn btn-sm btn-link p-0 mt-1"
+                    asp-page-handler="MoveField" asp-route-path="@Model.Variable.Path" asp-route-toPerDocument="true">
+                своё для каждого документа
+            </button>
+        }
+    }
+</div>

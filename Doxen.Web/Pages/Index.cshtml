@@ -1,11 +1,54 @@
-﻿@page
+@page
 @model IndexModel
 @{
     ViewData["Title"] = "Главная";
 }
 
-<div class="text-center">
+<div class="text-center mb-4">
     <h1 class="display-4">Doxen</h1>
-    <p>Генерация документов .docx по шаблонам с переменными — без Microsoft Office.</p>
-    <p class="text-muted">Демо-разбор шаблона и заполнение появятся здесь на следующем этапе.</p>
+    <p class="lead">Генерация документов .docx по шаблонам с переменными — без Microsoft Office.</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5">Проверьте свой шаблон</h2>
+                <p class="text-muted">
+                    Загрузите файл .docx с переменными вида <code>{{org.name}}</code> — Doxen найдёт их,
+                    без регистрации.
+                </p>
+
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <input asp-for="Template" type="file" class="form-control" accept=".docx" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Разобрать шаблон</button>
+                </form>
+
+                @if (Model.UploadError is not null)
+                {
+                    <div class="alert alert-danger mt-3">@Model.UploadError</div>
+                }
+
+                @if (Model.FoundVariables is not null)
+                {
+                    <div class="alert alert-success mt-3">
+                        <p>Найдено переменных: <strong>@Model.FoundVariables.Count</strong></p>
+                        <ul class="mb-3">
+                            @foreach (var variable in Model.FoundVariables.Take(20))
+                            {
+                                <li><code>{{@variable.Expression}}</code></li>
+                            }
+                        </ul>
+                        @if (Model.FoundVariables.Count > 20)
+                        {
+                            <p class="text-muted">И ещё @(Model.FoundVariables.Count - 20)…</p>
+                        }
+                        <a asp-page="/Generate" class="btn btn-warning">Заполнить и собрать документ</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>
