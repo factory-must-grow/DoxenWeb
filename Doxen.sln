@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Doxen.Data", "Doxen.Data\Do
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Doxen.Web", "Doxen.Web\Doxen.Web.csproj", "{114B984C-4A44-4C62-B58F-D2C360E34F7E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Doxen.Engine", "Doxen.Engine\Doxen.Engine.csproj", "{13DFF1AE-53AD-4B81-8A0D-E967D65818C5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Doxen.Engine.Tests", "Doxen.Engine.Tests\Doxen.Engine.Tests.csproj", "{3172AD9E-65E3-4FBA-911F-25521CD0ECC8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +28,13 @@ Global
 		{114B984C-4A44-4C62-B58F-D2C360E34F7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{114B984C-4A44-4C62-B58F-D2C360E34F7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{114B984C-4A44-4C62-B58F-D2C360E34F7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13DFF1AE-53AD-4B81-8A0D-E967D65818C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13DFF1AE-53AD-4B81-8A0D-E967D65818C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13DFF1AE-53AD-4B81-8A0D-E967D65818C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13DFF1AE-53AD-4B81-8A0D-E967D65818C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3172AD9E-65E3-4FBA-911F-25521CD0ECC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3172AD9E-65E3-4FBA-911F-25521CD0ECC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3172AD9E-65E3-4FBA-911F-25521CD0ECC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3172AD9E-65E3-4FBA-911F-25521CD0ECC8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
