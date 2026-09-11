@@ -5,23 +5,27 @@
     var fieldId = "f_" + Model.Variable.Path.Replace('.', '_');
 }
 
-<div class="mb-3">
-    <label class="form-label" for="@fieldId">@Model.Variable.Path</label>
+<div class="field-row">
+    <label class="d-block mb-1" for="@fieldId">@Model.Variable.Path</label>
+    <div class="field-path mb-2">@Model.Variable.Path</div>
 
     @switch (Model.Kind)
     {
         case Doxen.Web.Services.FieldKind.Person:
             <div class="row g-2">
-                <div class="col">
-                    <input type="text" class="form-control" placeholder="Имя"
+                <div class="col-12 col-sm">
+                    <label class="visually-hidden" for="@(fieldId)_first">Имя — @Model.Variable.Path</label>
+                    <input type="text" id="@(fieldId)_first" class="form-control" placeholder="Имя"
                            name="@(prefix + Model.FirstNamePath)" value="@Model.FirstName" />
                 </div>
-                <div class="col">
-                    <input type="text" class="form-control" placeholder="Отчество"
+                <div class="col-12 col-sm">
+                    <label class="visually-hidden" for="@(fieldId)_middle">Отчество — @Model.Variable.Path</label>
+                    <input type="text" id="@(fieldId)_middle" class="form-control" placeholder="Отчество"
                            name="@(prefix + Model.MiddleNamePath)" value="@Model.MiddleName" />
                 </div>
-                <div class="col">
-                    <input type="text" class="form-control" placeholder="Фамилия"
+                <div class="col-12 col-sm">
+                    <label class="visually-hidden" for="@(fieldId)_last">Фамилия — @Model.Variable.Path</label>
+                    <input type="text" id="@(fieldId)_last" class="form-control" placeholder="Фамилия"
                            name="@(prefix + Model.LastNamePath)" value="@Model.LastName" />
                 </div>
             </div>
@@ -31,7 +35,7 @@
             <div class="d-flex gap-2 align-items-center flex-wrap">
                 <input type="date" id="@fieldId" class="form-control date-toggle" style="max-width: 220px;"
                        name="@(prefix + Model.Variable.Path)" value="@Model.Value" />
-                <div class="form-check">
+                <div class="form-check mb-0">
                     <input type="checkbox" class="form-check-input" id="@(fieldId)_nodate"
                            name="@("nodate|" + Model.Variable.Path)" />
                     <label class="form-check-label" for="@(fieldId)_nodate">Без даты</label>

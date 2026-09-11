@@ -4,9 +4,19 @@
     ViewData["Title"] = "Админка";
 }
 
-<h1>Админка</h1>
+<h1 class="h3 mb-4">Админка</h1>
 
-<ul>
-    <li><a asp-page="/Admin/Users">Пользователи</a> — тарифы, расход за месяц, блокировка</li>
-    <li><a asp-page="/Admin/Plans">Тарифы</a> — лимиты, цена, пакетный режим</li>
-</ul>
+<div class="row g-3">
+    <div class="col-sm-6 col-md-4">
+        <a asp-page="/Admin/Users" class="panel d-block p-3 text-decoration-none">
+            <h2 class="h5 mb-1">Пользователи</h2>
+            <p class="mb-0" style="font-size:.875rem;color:var(--muted)">тарифы, расход за месяц, блокировка</p>
+        </a>
+    </div>
+    <div class="col-sm-6 col-md-4">
+        <a asp-page="/Admin/Plans" class="panel d-block p-3 text-decoration-none">
+            <h2 class="h5 mb-1">Тарифы</h2>
+            <p class="mb-0" style="font-size:.875rem;color:var(--muted)">лимиты, цена, пакетный режим</p>
+        </a>
+    </div>
+</div>

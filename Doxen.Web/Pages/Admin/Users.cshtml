@@ -4,74 +4,77 @@
     ViewData["Title"] = "Пользователи";
 }
 
-<h1>Пользователи</h1>
-
-<p><a asp-page="/Admin/Index">Админка</a> / <a asp-page="/Admin/Plans">Тарифы</a></p>
+<h1 class="h3 mb-2">Пользователи</h1>
+<p class="mb-4"><a asp-page="/Admin/Index">Админка</a> / <a asp-page="/Admin/Plans">Тарифы</a></p>
 
 <form method="get" class="row g-2 mb-3" style="max-width: 480px;">
     <div class="col">
-        <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="Поиск по почте" />
+        <label class="visually-hidden" for="search-input">Поиск по почте</label>
+        <input type="text" id="search-input" name="Search" value="@Model.Search" class="form-control" placeholder="Поиск по почте" />
     </div>
     <div class="col-auto">
-        <button type="submit" class="btn btn-outline-secondary">Найти</button>
+        <button type="submit" class="btn btn-quiet">Найти</button>
     </div>
 </form>
 
-<div class="table-responsive">
-    <table class="table table-sm align-middle">
-        <thead>
-            <tr>
-                <th>Почта</th>
-                <th>Тариф</th>
-                <th>Документов за месяц</th>
-                <th>Дата регистрации</th>
-                <th>Блокировка</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var row in Model.Rows)
-            {
+<div class="panel">
+    <div class="table-responsive">
+        <table class="tbl w-100 mb-0">
+            <thead>
                 <tr>
-                    <td>@row.Email</td>
-                    <td>
-                        <form method="post" asp-page-handler="ChangePlan" asp-route-search="@Model.Search"
-                              asp-route-pageNumber="@Model.PageNumber">
-                            <input type="hidden" name="userId" value="@row.UserId" />
-                            <select name="planId" class="form-select form-select-sm" style="min-width: 140px;"
-                                    onchange="this.form.submit()">
-                                @foreach (var plan in Model.Plans)
-                                {
-                                    <option value="@plan.Id" selected="@(plan.Id == row.PlanId)">@plan.Name</option>
-                                }
-                            </select>
-                        </form>
-                    </td>
-                    <td>@row.DocumentsThisMonth</td>
-                    <td>@row.CreatedAt.ToString("d MMMM yyyy")</td>
-                    <td>
-                        @if (row.LockoutEnd is { } lockoutEnd && lockoutEnd > DateTimeOffset.UtcNow)
-                        {
-                            <span class="badge text-bg-danger">заблокирован до @lockoutEnd.ToString("d MMMM, HH:mm")</span>
-                        }
-                        else
-                        {
-                            <span class="text-muted">—</span>
-                        }
-                    </td>
+                    <th>Почта</th>
+                    <th>Тариф</th>
+                    <th>Документов за месяц</th>
+                    <th>Дата регистрации</th>
+                    <th>Блокировка</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var row in Model.Rows)
+                {
+                    <tr>
+                        <td>@row.Email</td>
+                        <td>
+                            <form method="post" asp-page-handler="ChangePlan" asp-route-search="@Model.Search"
+                                  asp-route-pageNumber="@Model.PageNumber">
+                                <label class="visually-hidden" for="plan_@row.UserId">Тариф — @row.Email</label>
+                                <input type="hidden" name="userId" value="@row.UserId" />
+                                <select id="plan_@row.UserId" name="planId" class="form-select form-select-sm" style="min-width: 140px;"
+                                        onchange="this.form.submit()">
+                                    @foreach (var plan in Model.Plans)
+                                    {
+                                        <option value="@plan.Id" selected="@(plan.Id == row.PlanId)">@plan.Name</option>
+                                    }
+                                </select>
+                            </form>
+                        </td>
+                        <td>@row.DocumentsThisMonth</td>
+                        <td>@row.CreatedAt.ToString("d MMMM yyyy")</td>
+                        <td>
+                            @if (row.LockoutEnd is { } lockoutEnd && lockoutEnd > DateTimeOffset.UtcNow)
+                            {
+                                <span class="badge text-bg-danger">заблокирован до @lockoutEnd.ToString("d MMMM, HH:mm")</span>
+                            }
+                            else
+                            {
+                                <span style="color:var(--muted)">—</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
 @if (Model.Rows.Count == 0)
 {
-    <p class="text-muted">Пользователи не найдены.</p>
+    <p class="mt-3">Пользователи не найдены. Проверьте адрес почты или очистите поиск.</p>
 }
 
 @if (Model.TotalPages > 1)
 {
-    <nav>
+    <nav class="mt-3" aria-label="Страницы списка пользователей">
         <ul class="pagination">
             @for (var i = 1; i <= Model.TotalPages; i++)
             {

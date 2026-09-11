@@ -4,50 +4,113 @@
     ViewData["Title"] = "Главная";
 }
 
-<div class="text-center mb-4">
-    <h1 class="display-4">Doxen</h1>
-    <p class="lead">Генерация документов .docx по шаблонам с переменными — без Microsoft Office.</p>
+<div class="row g-4 g-lg-5 align-items-center mb-5">
+    <div class="col-lg-6">
+        <h1 class="mb-4">Шаблон в Word<br />превращается в документ</h1>
+        <p class="lead-sm mb-4">
+            Doxen находит в вашем <span class="mono">.docx</span> все переменные вида
+            <span class="mono">{{org.inn}}</span>, спрашивает значения и собирает готовый файл.
+            Word на компьютере не нужен.
+        </p>
+
+        <div class="panel p-4">
+            <h2 class="h5 mb-2">Проверьте свой шаблон</h2>
+            <p class="mb-3" style="color:var(--muted)">
+                Файл не сохраняется на сервере — переменные показываем сразу, без регистрации.
+            </p>
+
+            <form method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label" for="Template">Шаблон .docx</label>
+                    <input asp-for="Template" type="file" class="form-control" accept=".docx" />
+                </div>
+                <button type="submit" class="btn btn-marker">Разобрать шаблон</button>
+            </form>
+
+            @if (Model.UploadError is not null)
+            {
+                <div class="alert alert-danger mt-3 mb-0" role="alert">@Model.UploadError</div>
+            }
+
+            @if (Model.FoundVariables is not null)
+            {
+                <div class="mt-3">
+                    <p class="mb-2">Найдено переменных: <strong>@Model.FoundVariables.Count</strong></p>
+                    <ul class="mb-3">
+                        @foreach (var variable in Model.FoundVariables.Take(20))
+                        {
+                            <li><span class="tok">{{@variable.Expression}}</span></li>
+                        }
+                    </ul>
+                    @if (Model.FoundVariables.Count > 20)
+                    {
+                        <p style="color:var(--muted)">И ещё @(Model.FoundVariables.Count - 20)…</p>
+                    }
+                    <a asp-page="/Generate" class="btn btn-marker">Заполнить и собрать документ</a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="sheet">
+            <div class="sheet-body">
+                <div class="sheet-title">ДОВЕРЕННОСТЬ № <span class="tok">{{doc.number}}</span></div>
+                <p>Общество с ограниченной ответственностью
+                    <span class="tok">{{org.name}}</span>,
+                    ИНН <span class="tok">{{org.inn}}</span>,
+                    в лице генерального директора
+                    <span class="tok">{{initialsEnd(org.director)}}</span>,
+                    настоящей доверенностью уполномочивает</p>
+                <p><span class="tok">{{agent.fullName}}</span>,
+                    паспорт <span class="tok">{{agent.passport.series}}</span>,
+                    представлять интересы Общества в отношениях с
+                    <span class="tok">{{org.bank.bankName}}</span>.</p>
+                <p class="mb-0">Доверенность действительна до
+                    <span class="tok">{{doc.validUntil}}</span>.</p>
+            </div>
+        </div>
+        <p class="text-center mt-3" style="font-size:.8125rem">
+            Жёлтым отмечено то, что Doxen попросит заполнить
+        </p>
+    </div>
 </div>
 
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body">
-                <h2 class="h5">Проверьте свой шаблон</h2>
-                <p class="text-muted">
-                    Загрузите файл .docx с переменными вида <code>{{org.name}}</code> — Doxen найдёт их,
-                    без регистрации.
+<div class="row g-4 g-lg-5">
+    <div class="col-lg-5">
+        <h2 class="mb-3">Как это работает</h2>
+        <p class="lead-sm">Три шага. Со второго раза — два: файл ответов подставит всё, что вы уже вводили.</p>
+    </div>
+    <div class="col-lg-7">
+        <div class="step">
+            <div class="step-n">1</div>
+            <div>
+                <h3>Загрузите шаблон</h3>
+                <p class="mb-0" style="color:var(--muted);font-size:.9375rem">
+                    Обычный <span class="mono">.docx</span>, где вместо значений стоят переменные вида
+                    <span class="mono">{{org.inn}}</span>. Doxen прочитает их все, включая те, что внутри
+                    таблиц и колонтитулов.
                 </p>
-
-                <form method="post" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <input asp-for="Template" type="file" class="form-control" accept=".docx" />
-                    </div>
-                    <button type="submit" class="btn btn-primary">Разобрать шаблон</button>
-                </form>
-
-                @if (Model.UploadError is not null)
-                {
-                    <div class="alert alert-danger mt-3">@Model.UploadError</div>
-                }
-
-                @if (Model.FoundVariables is not null)
-                {
-                    <div class="alert alert-success mt-3">
-                        <p>Найдено переменных: <strong>@Model.FoundVariables.Count</strong></p>
-                        <ul class="mb-3">
-                            @foreach (var variable in Model.FoundVariables.Take(20))
-                            {
-                                <li><code>{{@variable.Expression}}</code></li>
-                            }
-                        </ul>
-                        @if (Model.FoundVariables.Count > 20)
-                        {
-                            <p class="text-muted">И ещё @(Model.FoundVariables.Count - 20)…</p>
-                        }
-                        <a asp-page="/Generate" class="btn btn-warning">Заполнить и собрать документ</a>
-                    </div>
-                }
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-n">2</div>
+            <div>
+                <h3>Заполните значения</h3>
+                <p class="mb-0" style="color:var(--muted);font-size:.9375rem">
+                    Вручную в форме — или загрузите файл ответов с прошлого раза. Что найдётся в файле,
+                    подставится само; спросим только про остальное.
+                </p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-n">3</div>
+            <div>
+                <h3>Заберите документ и файл ответов</h3>
+                <p class="mb-0" style="color:var(--muted);font-size:.9375rem">
+                    Документ готов к печати. Файл ответов сохраните у себя: в следующий раз он подставится
+                    обратно.
+                </p>
             </div>
         </div>
     </div>
